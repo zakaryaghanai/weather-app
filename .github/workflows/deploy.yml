@@ -1,0 +1,14 @@
+name: Github Pages Deployment
+on: [push]
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Github Pages
+    steps:
+      - uses: actions/checkout@v2
+      - id: Build-Vue
+        uses: xRealNeon/VuePagesAction@1.0.0
+        with:
+          username: 'zakaryaghanai'
+          reponame: 'weather-app'
+          token: ${{ secrets.GITHUB_TOKEN }}
