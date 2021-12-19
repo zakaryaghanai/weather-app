@@ -16,9 +16,11 @@
 </script>
 
 <style lang="scss">
+
+
   * {
-    font-family: Avenir, Helvetica, Arial, sans-serif;
     box-sizing: border-box;
+    font-family: Outfit-Light ,serif;
   }
   #app {
     width: 100%;

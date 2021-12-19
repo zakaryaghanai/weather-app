@@ -5,5 +5,6 @@ import router from './router'
 
 
 import '@/assets/tailwind.css'
+import '@/assets/css/fonts.css';
 
 createApp(App).use(router).use(store).mount('#app')
