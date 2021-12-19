@@ -16,6 +16,7 @@ var geoapify = axios.create({
     params: {
         apiKey : process.env.VUE_APP_GEOAPIFY_API_KEY
     }
+
 });
 
 var openWeatherMap = axios.create({
