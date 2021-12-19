@@ -16,11 +16,13 @@
                         </div>
                     </div>
                     <div class="search-result">
-                        <div class="suggestions">
+                        <div class="no-result flex justify-center py-20" v-if="!suggestions.length">
+                            <span class="text-lg text-gray-400">No recent searches</span>
+                        </div>
+                        <div class="suggestions" v-if="suggestions.length">
                             <div class="suggestion" v-for="(suggestion, index) in suggestions" :key="index" @click="searchWeather(suggestion)">
                                 <span v-html="boldSelectedText(suggestion.properties.formatted)"></span>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -37,7 +39,7 @@
                             stroke-linejoin="round"></circle>
                 </svg>
                 <input class="search-input" type="text" placeholder="Search Place..." @click="showSearchModal()">
-                <span class="pl-3 flex-none text-xs font-semibold absolute right-3 top-4 text-gray-500 pointer-events-none">Ctrl K</span>
+                <span class="pl-3 flex-none text-xs font-semibold absolute right-3 top-4 text-gray-400 pointer-events-none">Ctrl K</span>
             </div>
 
         </div>
@@ -193,13 +195,12 @@ export default {
                     @apply w-full overflow-y-auto  py-2;
                     height: 80%;
 
-                    .suggestions{
-                        @apply flex flex-col;
+                    .suggestions {
+                        @apply flex flex-col p-6 gap-2;
 
                         .suggestion {
-                            @apply flex justify-between text-gray-500 text-lg py-1 px-6
-                            hover:bg-gray-100 cursor-pointer
-                            ;
+                            @apply flex justify-between text-gray-500 text-lg py-4 px-6
+                            hover:bg-gray-100 cursor-pointer rounded;
                         }
                     }
                 }
