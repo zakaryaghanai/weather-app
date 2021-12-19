@@ -21,7 +21,7 @@
                         </div>
                         <div class="suggestions" v-if="suggestions.length">
                             <div class="suggestion" v-for="(suggestion, index) in suggestions" :key="index" @click="searchWeather(suggestion)">
-                                <span v-html="boldSelectedText(suggestion.properties.formatted)"></span>
+                                <span class="text-gray-800" v-html="boldSelectedText(suggestion.properties.formatted)"></span>
                             </div>
                         </div>
                     </div>
@@ -42,16 +42,48 @@
                 <span class="pl-3 flex-none text-xs font-semibold absolute right-3 top-4 text-gray-400 pointer-events-none">Ctrl K</span>
             </div>
 
+            <div class="icon flex items-center justify-center py-10">
+                <img class="object-cover rounded-full w-60 h-60 bg-center bg-cover"
+                     :src="require('@/assets/images/icons/cloudy-night.gif')" alt="sky">
+            </div>
+
+            <div class="text-gray-800 py-5">
+                <span class="text-8xl text-gray-700">
+                    23<sup>°C</sup>
+                </span>
+            </div>
+
+            <div class="text-3xl text-gray-700 py-5">
+                {{placeDateTime}}
+            </div>
         </div>
 
         <div class="page">
 
-            <div class="topbar">
-                <div class="settings">
-                    <div class="temp active-temp">C °</div>
-                    <div class="temp">
-                        <span>F °</span>
-                    </div>
+            <div class="topbar gap-0 lg:gap-10 justify-between my-5 lg:my-0">
+                <div class="placeDateTime hidden lg:block">
+                    {{placeDateTime}}
+                </div>
+                <div class="search-box w-full lg:hidden ">
+                    <svg width="24" height="24" fill="none" aria-hidden="true" class="mr-3 flex-none text-gray-400">
+                        <path d="m19 19-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                              stroke-linejoin="round"></path>
+                        <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round"></circle>
+                    </svg>
+                    <input class="search-input w-full" type="text" placeholder="Search Place..." @click="showSearchModal()">
+                    <span class="pl-3 flex-none text-xs font-semibold absolute right-3 top-4 text-gray-400 pointer-events-none">Ctrl K</span>
+                </div>
+                <div class="sm:block lg:hidden pl-2 ml-0 md:ml-2">
+                    <button type="button" aria-expanded="false"
+                            class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white
+                             hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gray-400">
+                        <span class="sr-only">Open main menu</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                             class="block h-6 w-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
 
@@ -66,8 +98,10 @@
                                     <span class="text-date">{{ day.date }}</span>
                                     <div class="temp text-5xl relative">
                                         <div class="text-center text-gray-600">
-                                            <span>{{ day.temp }}</span>
-                                            <span class="text-gray-400 absolute -top-1">°</span>
+                                            <span class="relative">
+                                                <span class="text-gray-400 absolute -top-2 -right-5">°</span>
+                                                <span>{{ day.temp }}</span>
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -88,12 +122,15 @@
 </template>
 
 <script>
+import moment from 'moment'
+
 export default {
     name: 'Home',
     data() {
         return {
             showSearch: false,
             searchQuery : '',
+            placeDateTime: '',
             suggestions: {},
             coordinates: {
               lat : 0,
@@ -135,7 +172,8 @@ export default {
         async search(query){
             let result =  await this.$geoapify.get('', {
                 params: {
-                    'text': query
+                    'text': query,
+                    limit: 20
                 }
             })
             this.suggestions = result.data.features;
@@ -147,10 +185,23 @@ export default {
 
            return selectedText.replace(regEx, '<b>' + replaceMask + '</b>');
         },
-        searchWeather(suggestion) {
+        async searchWeather(suggestion) {
             this.coordinates.lat = suggestion.properties.lat
             this.coordinates.lon = suggestion.properties.lon
-        }
+
+            let result = await this.$openWeatherMap.get('', {
+                params: {
+                    lat: this.coordinates.lat,
+                    lon: this.coordinates.lon,
+                }
+            })
+
+            this.placeDateTime = this.convertToDateTime(result.data.current.dt, result.data.timezone_offset);
+            this.hideSearchModal();
+        },
+        convertToDateTime(unix, timeZoneOffset) {
+            return moment.unix(unix + timeZoneOffset - 3600).format('dddd, HH:mm')
+        },
 
     },
     mounted() {
@@ -197,7 +248,7 @@ export default {
 
                     .suggestions {
                         @apply flex flex-col p-6 gap-2;
-
+                        max-height: 30em !important;
                         .suggestion {
                             @apply flex justify-between text-gray-500 text-lg py-4 px-6
                             hover:bg-gray-100 cursor-pointer rounded;
@@ -226,28 +277,39 @@ export default {
     }
 
     .page {
-        @apply flex-grow;
+        @apply flex-grow flex flex-col;
 
         .topbar {
-            @apply w-full h-32 container mx-auto flex items-center;
+            @apply w-full h-32 flex items-center px-10 ;
+
+            .placeDateTime {
+                @apply text-2xl font-extrabold text-gray-600;
+            }
 
             .settings {
-                @apply w-full flex justify-end gap-4 px-6;
+                @apply flex justify-end gap-4;
 
-                .temp {
-                    @apply rounded-full w-10 h-10 flex justify-center items-center cursor-pointer
-                    w-10 h-10 bg-white text-gray-900 flex justify-center items-center cursor-pointer
-                    shadow-md;
+                .temps {
+                    @apply flex gap-2;
+
+                    .temp {
+                        @apply rounded-full w-10 h-10 flex justify-center items-center cursor-pointer
+                        w-10 h-10 bg-white text-gray-900 flex justify-center items-center cursor-pointer
+                        shadow-md;
+                    }
+
+                    .active-temp {
+                        @apply bg-gray-800 text-white;
+                    }
                 }
 
-                .active-temp {
-                    @apply bg-gray-800 text-white;
-                }
+
+
             }
         }
 
         .page-body {
-            @apply h-full w-full w-10/12 px-10;
+            @apply flex-grow h-full w-full w-10/12 px-10;
         }
 
         .section {

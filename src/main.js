@@ -14,12 +14,20 @@ import '@/assets/css/fonts.css';
 var geoapify = axios.create({
     baseURL: 'https://api.geoapify.com/v1/geocode/autocomplete',
     params: {
-        'apiKey' : process.env.VUE_APP_GEOAPIFY_API_KEY
+        apiKey : process.env.VUE_APP_GEOAPIFY_API_KEY
+    }
+});
+
+var openWeatherMap = axios.create({
+    baseURL: 'https://api.openweathermap.org/data/2.5/onecall',
+    params: {
+        appId : process.env.VUE_APP_OPEN_WEATHER_MAP_API_KEY
     }
 });
 
 let Vue = createApp(App);
 
 Vue.config.globalProperties.$geoapify = geoapify;
+Vue.config.globalProperties.$openWeatherMap = openWeatherMap;
 
 Vue.use(router).use(store).mount('#app')
