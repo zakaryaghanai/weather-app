@@ -10,13 +10,18 @@
                             <path d="m19 19-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
                             <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></circle>
                         </svg>
-                        <input type="text" class="text-xl search-text" placeholder="Search place" ref="query">
+                        <input type="text" class="text-xl search-text" placeholder="Search place" v-model="searchQuery" ref="query">
                         <div class="flex justify-center items-center">
                             <button @click="hideSearchModal()" class="text-gray-500 text-sm font-semibold border hover:border-gray-300 duration-75 shadow-sm py-1 px-3 rounded-lg">ESC</button>
                         </div>
                     </div>
                     <div class="search-result">
+                        <div class="suggestions">
+                            <div class="suggestion" v-for="(suggestion, index) in suggestions" :key="index" @click="searchWeather(suggestion)">
+                                <span v-html="boldSelectedText(suggestion.properties.formatted)"></span>
+                            </div>
 
+                        </div>
                     </div>
                 </div>
             </div>
@@ -86,6 +91,12 @@ export default {
     data() {
         return {
             showSearch: false,
+            searchQuery : '',
+            suggestions: {},
+            coordinates: {
+              lat : 0,
+              lon : 0,
+            },
             daily: {
                 0: {'date': "Sun", 'weather': "cloudy-night.gif", 'temp': "22",},
                 1: {'date': "Mon", 'weather': "cloudy-night.gif", 'temp': "25",},
@@ -97,8 +108,20 @@ export default {
             }
         }
     },
+    watch: {
+        searchQuery(query){
+            if(query.trim().length >= 3) {
+                this.search(query)
+            }
+
+            if(!query.trim().length) {
+               this.suggestions = {}
+            }
+        }
+    },
     methods: {
         showSearchModal() {
+            this.searchQuery = ""
             this.showSearch = true
             setTimeout(() => {
                 this.$refs.query.focus()
@@ -107,6 +130,25 @@ export default {
         hideSearchModal() {
             this.showSearch = false
         },
+        async search(query){
+            let result =  await this.$geoapify.get('', {
+                params: {
+                    'text': query
+                }
+            })
+            this.suggestions = result.data.features;
+        },
+        boldSelectedText(selectedText) {
+            let searchMask = this.searchQuery;
+            let regEx = new RegExp(searchMask, "ig");
+            let replaceMask = this.searchQuery.charAt(0).toUpperCase() + this.searchQuery.slice(1);
+
+           return selectedText.replace(regEx, '<b>' + replaceMask + '</b>');
+        },
+        searchWeather(suggestion) {
+            this.coordinates.lat = suggestion.properties.lat
+            this.coordinates.lon = suggestion.properties.lon
+        }
 
     },
     mounted() {
@@ -148,8 +190,18 @@ export default {
                 }
 
                 .search-result {
-                    @apply w-full overflow-y-auto px-10;
+                    @apply w-full overflow-y-auto  py-2;
                     height: 80%;
+
+                    .suggestions{
+                        @apply flex flex-col;
+
+                        .suggestion {
+                            @apply flex justify-between text-gray-500 text-lg py-1 px-6
+                            hover:bg-gray-100 cursor-pointer
+                            ;
+                        }
+                    }
                 }
             }
         }
