@@ -4,6 +4,9 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     name: Deploy to Github Pages
+    env:
+      VUE_APP_GEOAPIFY_API_KEY: ${{ secrets.VUE_APP_GEOAPIFY_API_KEY }}
+      VUE_APP_OPEN_WEATHER_MAP_API_KEY: ${{ secrets.VUE_APP_OPEN_WEATHER_MAP_API_KEY }}
     steps:
       - uses: actions/checkout@v2
       - id: Build-Vue
