@@ -96,7 +96,22 @@
                 <div class="section">
                     <div class="section-title">Week</div>
                     <div class="section-body">
-                        <div class="cards">
+
+                        <!-- Cards Loader -->
+                        <div class="cards" v-if="contentLoading">
+                            <div class="card" v-for="(day, index) in daily" :key="index" >
+                                <ContentLoader class="mb-3" width="30%" height="20"></ContentLoader>
+                                <div class="flex justify-center mb-6">
+                                    <ContentLoader width="30%" height="34"></ContentLoader>
+                                </div>
+                                <div class="flex justify-center">
+                                    <ContentLoader width="60%" height="100"></ContentLoader>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cards -->
+                        <div class="cards" v-else>
                             <div class="card"
                                  v-for="(day, index) in daily" :key="index">
                                 <div class="font-semibold relative">
@@ -128,11 +143,16 @@
 
 <script>
 import moment from 'moment'
+import { ContentLoader } from 'vue-content-loader'
 
 export default {
     name: 'Home',
+    components: {
+        ContentLoader
+    },
     data() {
         return {
+            contentLoading: false,
             showSearch: false,
             loading: false,
             searchQuery : '',
@@ -194,6 +214,10 @@ export default {
            return selectedText.replace(regEx, '<b>' + replaceMask + '</b>');
         },
         async searchWeather(suggestion) {
+
+            this.contentLoading = true
+            this.hideSearchModal()
+
             this.coordinates.lat = suggestion.properties.lat
             this.coordinates.lon = suggestion.properties.lon
 
@@ -204,8 +228,9 @@ export default {
                 }
             })
 
-            this.placeDateTime = this.convertToDateTime(result.data.current.dt, result.data.timezone_offset);
-            this.hideSearchModal();
+            this.contentLoading = false
+
+            this.placeDateTime = this.convertToDateTime(result.data.current.dt, result.data.timezone_offset)
         },
         convertToDateTime(unix, timeZoneOffset) {
             return moment.unix(unix + timeZoneOffset - 3600).format('dddd, HH:mm')
