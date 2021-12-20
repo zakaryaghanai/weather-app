@@ -2,7 +2,7 @@
 
     <div class="weather-main-page">
 
-        <div class="search-page" v-show="showSearch">
+        <div class="search-page" v-show="showSearchBox">
             <div class="search-page-container">
                 <div class="search-body">
                     <div class="search-form border-b">
@@ -24,8 +24,8 @@
                                 <path class="opacity-75 fill-current text-gray-600" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
                         </div>
-                        <div class="suggestions overflow-auto" v-else>
-                            <div class="suggestion" v-for="(suggestion, index) in suggestions" :key="index" @click="searchWeather(suggestion)">
+                        <div class="suggestions overflow-auto" ref="suggestions" v-else>
+                            <div class="suggestion" :class="{'activeSuggestion' : index === selectedIndex}" v-for="(suggestion, index) in suggestions" :key="index" @click="searchWeather(suggestion)" :data-index="index" :ref="'suggestion_' + index">
                                 <span class="text-gray-800" v-html="boldSelectedText(suggestion.properties.formatted)"></span>
                             </div>
                         </div>
@@ -65,7 +65,7 @@
 
         <div class="page">
 
-            <div class="topbar gap-0 lg:gap-10 justify-between my-5 lg:my-0">
+            <div class="topbar gap-0 lg:gap-10 justify-between my-0">
                 <div class="placeDateTime hidden lg:block">
                     {{placeDateTime}}
                 </div>
@@ -153,11 +153,12 @@ export default {
     data() {
         return {
             contentLoading: false,
-            showSearch: false,
+            showSearchBox: false,
             loading: false,
             searchQuery : '',
             placeDateTime: '',
             suggestions: {},
+            selectedIndex: -1,
             coordinates: {
               lat : 0,
               lon : 0,
@@ -182,18 +183,23 @@ export default {
             if (!query.trim().length) {
                this.suggestions = {}
             }
+        },
+        selectedIndex(val, oldVal){
+            if(val !== oldVal){
+                this.triggerSearchBoxResultScroll()
+            }
         }
     },
     methods: {
         showSearchModal() {
             this.searchQuery = ""
-            this.showSearch = true
+            this.showSearchBox = true
             setTimeout(() => {
                 this.$refs.query.focus()
             }, 50)
         },
         hideSearchModal() {
-            this.showSearch = false
+            this.showSearchBox = false
         },
         async search(query) {
             this.loading = true
@@ -235,6 +241,13 @@ export default {
         convertToDateTime(unix, timeZoneOffset) {
             return moment.unix(unix + timeZoneOffset - 3600).format('dddd, HH:mm')
         },
+        triggerSearchBoxResultScroll(){
+            let element = this.$refs['suggestion_' + this.selectedIndex];
+            if(element[0]){
+                let top = element[0].offsetTop;
+                this.$refs['suggestions'].scrollTo(0, top - 50);
+            }
+        }
 
     },
     mounted() {
@@ -244,7 +257,18 @@ export default {
                 this.showSearchModal()
             } else if (event.key === 'Escape' || event.key === 'Esc') {
                 this.hideSearchModal()
+            } else if(event.key === 'ArrowDown') {
+                if(this.selectedIndex < this.suggestions.length - 1) {
+                    this.selectedIndex++;
+                }
+
+            } else if(event.key === 'ArrowUp') {
+                if(this.selectedIndex > 0) {
+                    this.selectedIndex--;
+                }
+
             }
+
         });
     }
 }
@@ -285,6 +309,9 @@ export default {
                         .suggestion {
                             @apply flex justify-between text-gray-500 text-lg py-4 px-6
                             hover:bg-gray-100 cursor-pointer rounded;
+                        }
+                        .activeSuggestion {
+                            @apply bg-gray-100 cursor-pointer rounded;
                         }
                     }
                 }
@@ -342,7 +369,7 @@ export default {
         }
 
         .page-body {
-            @apply flex-grow h-full w-full w-10/12 px-10;
+            @apply flex-grow h-full w-full w-10/12 px-10 overflow-y-auto;
         }
 
         .section {
