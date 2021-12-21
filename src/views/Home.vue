@@ -25,8 +25,8 @@
                             </svg>
                         </div>
                         <div class="suggestions overflow-auto" ref="suggestions" v-else>
-                            <div class="suggestion" :class="{'activeSuggestion' : index === selectedIndex}" v-for="(suggestion, index) in suggestions" :key="index" @click="searchWeather(suggestion)" :data-index="index" :ref="'suggestion_' + index">
-                                <span class="text-gray-800" v-html="boldSelectedText(suggestion.properties.formatted)"></span>
+                            <div class="suggestion" :class="{'activeSuggestion' : index === selectedIndex}" v-for="(suggestion, index) in suggestions" :key="index" @click="searchWeather(index)" :data-index="index" :ref="'suggestion_' + index">
+                                <div class="text-gray-800 flex-grow" v-html="boldSelectedText(suggestion.properties.formatted)"></div>
                             </div>
                         </div>
                     </div>
@@ -52,43 +52,61 @@
                      :src="require('@/assets/images/icons/cloudy-night.gif')" alt="sky">
             </div>
 
-            <div class="text-gray-800 py-5">
+            <div class="text-gray-800 py-5 ">
+                <span class="text-4xl text-gray-400">Now</span>
                 <span class="text-8xl text-gray-700">
-                    23<sup>°C</sup>
+                    <div v-if="currentTemp">
+                        <span>{{currentTemp}}</span>
+                        <sup>°C</sup>
+                    </div>
+                    <div v-else class="flex items-center">
+                        <ContentLoader width="60%" height="100"></ContentLoader>
+                        <sup><ContentLoader class="relative -top-5 -right-2" width="50" height="50"></ContentLoader></sup>
+                    </div>
                 </span>
             </div>
 
+            <div class="spacer"></div>
             <div class="text-3xl text-gray-700 py-5">
-                {{placeDateTime}}
+                {{placeDateTime}} {{placeName}}
             </div>
         </div>
 
         <div class="page">
 
-            <div class="topbar gap-0 lg:gap-10 justify-between my-0">
-                <div class="placeDateTime hidden lg:block">
-                    {{placeDateTime}}
-                </div>
-                <div class="search-box w-full lg:hidden ">
-                    <svg width="24" height="24" fill="none" aria-hidden="true" class="mr-3 flex-none text-gray-400">
-                        <path d="m19 19-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                              stroke-linejoin="round"></path>
-                        <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round"></circle>
-                    </svg>
-                    <input class="search-input w-full" type="text" placeholder="Search Place..." @click="showSearchModal()">
-                    <span class="pl-3 flex-none text-xs font-semibold absolute right-3 top-4 text-gray-400 pointer-events-none">Ctrl K</span>
-                </div>
-                <div class="sm:block lg:hidden pl-2 ml-0 md:ml-2">
-                    <button type="button" aria-expanded="false"
-                            class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white
-                             hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gray-400">
-                        <span class="sr-only">Open main menu</span>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                             class="block h-6 w-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            <div class="topbar gap-0 flex-col lg:flex-row-reverse lg:gap-10 justify-between mt-5 lg:my-0">
+
+                <p class="placeDateTime hidden min-w-max lg:block">{{placeDateTime}}</p>
+                <div class="flex lg:hidden w-full">
+                    <div class="search-box w-full">
+                        <svg width="24" height="24" fill="none" aria-hidden="true" class="mr-3 flex-none text-gray-400">
+                            <path d="m19 19-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                  stroke-linejoin="round"></path>
+                            <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round"></circle>
                         </svg>
-                    </button>
+                        <input class="search-input w-full" type="text" placeholder="Search Place..." @click="showSearchModal()">
+                        <span class="pl-3 flex-none text-xs font-semibold absolute right-3 top-4 text-gray-400 pointer-events-none">Ctrl K</span>
+                    </div>
+                    <div class="sm:block lg:hidden pl-2 ml-0 md:ml-2">
+                        <button type="button" aria-expanded="false"
+                                class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white
+                             hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gray-400">
+                            <span class="sr-only">Open main menu</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                 class="block h-6 w-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="text-3xl text-gray-600 font-bold flex flex-grow w-full items-center pt-8 lg:p-0">
+                    <span class="pr-2">{{currentLocation}}</span>
+
+                    <svg width="24" height="24" aria-hidden="true" class="mr-3 flex-none text-gray-400">
+                        <path d="M10,1.375c-3.17,0-5.75,2.548-5.75,5.682c0,6.685,5.259,11.276,5.483,11.469c0.152,0.132,0.382,0.132,0.534,0c0.224-0.193,5.481-4.784,5.483-11.469C15.75,3.923,13.171,1.375,10,1.375 M10,17.653c-1.064-1.024-4.929-5.127-4.929-10.596c0-2.68,2.212-4.861,4.929-4.861s4.929,2.181,4.929,4.861C14.927,12.518,11.063,16.627,10,17.653 M10,3.839c-1.815,0-3.286,1.47-3.286,3.286s1.47,3.286,3.286,3.286s3.286-1.47,3.286-3.286S11.815,3.839,10,3.839 M10,9.589c-1.359,0-2.464-1.105-2.464-2.464S8.641,4.661,10,4.661s2.464,1.105,2.464,2.464S11.359,9.589,10,9.589"></path>
+
+                    </svg>
                 </div>
             </div>
 
@@ -97,9 +115,10 @@
                     <div class="section-title">Week</div>
                     <div class="section-body">
 
-                        <!-- Cards Loader -->
-                        <div class="cards" v-if="contentLoading">
-                            <div class="card" v-for="(day, index) in daily" :key="index" >
+                        <!-- Days Cards Loader -->
+                        <div class="daysCards" v-if="contentLoading">
+
+                            <div class="card" v-for="index in 7" :key="index" >
                                 <ContentLoader class="mb-3" width="30%" height="20"></ContentLoader>
                                 <div class="flex justify-center mb-6">
                                     <ContentLoader width="30%" height="34"></ContentLoader>
@@ -110,25 +129,111 @@
                             </div>
                         </div>
 
-                        <!-- Cards -->
-                        <div class="cards" v-else>
+                        <!-- Days Cards -->
+                        <div class="daysCards" v-else>
                             <div class="card"
                                  v-for="(day, index) in daily" :key="index">
                                 <div class="font-semibold relative">
-                                    <span class="text-date">{{ day.date }}</span>
+                                    <div class="date flex flex-col">
+                                        <span class="text-date">{{ day.dayName }}</span>
+                                        <span class="text-date text-sm text-gray-400">{{ day.fullDate }}</span>
+                                    </div>
                                     <div class="temp text-5xl relative">
                                         <div class="text-center text-gray-600">
                                             <span class="relative">
                                                 <span class="text-gray-400 absolute -top-2 -right-5">°</span>
-                                                <span>{{ day.temp }}</span>
+                                                <span>{{ day.temp.day }}</span>
                                             </span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="icon flex items-center justify-center pb-2">
                                     <img class="object-cover rounded-full w-28 h-28 bg-center bg-cover"
-                                         :src="require('@/assets/images/icons/'+ day.weather)" alt="sky">
+                                         :src="require('@/assets/images/icons/partly-cloudy.gif')" alt="sky">
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="section">
+                    <div class="section-title">Today's Highlights</div>
+                    <div class="section-body">
+
+                        <!-- Today Highlights Loader-->
+                        <div class="highlightsCards" v-if="contentLoading">
+                            <div class="card" v-for="index in 7" :key="index" >
+                                <ContentLoader class="mb-3" width="30%" height="40"></ContentLoader>
+                                <ContentLoader class="mb-3" width="80%" height="90"></ContentLoader>
+                                <ContentLoader width="50%" height="40"></ContentLoader>
+                            </div>
+                        </div>
+
+                        <!-- Today Highlights Data-->
+                        <div class="highlightsCards" v-else>
+                            <div class="card">
+                                <div class="header">
+                                    <div class="title">Wind Status</div>
+                                    <span class="info"></span>
+                                </div>
+                                <div class="content wind flex items-center">
+                                    <span class="text">{{ currentWeather.wind_speed }}</span>
+                                    <span class="text-4xl px-2 text-gray-400">km/h</span>
+                                </div>
+                                <div class="text-gray-500 text-3xl">Normal</div>
+                            </div>
+                            <div class="card">
+                                <div class="header">
+                                    <div class="title">Sunrise & Sunset</div>
+                                </div>
+                                <div class="content flex flex-col gap-4">
+                                    <div class="flex gap-2 items-center">
+                                        <img class="object-cover rounded-full w-14 h-14 bg-center bg-cover"
+                                             :src="require('@/assets/images/icons/sunny.gif')" alt="sky">
+                                        <div class="flex flex-col items-center">
+                                            <span class="text-xl text-gray-600">{{currentWeather.sunrise}}</span>
+                                            <span class="text-gray-300">Sunrise</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-2 items-center">
+                                        <img class="object-cover rounded-full w-14 h-14 bg-center bg-cover"
+                                             :src="require('@/assets/images/icons/sunny.gif')" alt="sky">
+                                        <div class="flex flex-col items-center">
+                                            <span class="text-xl text-gray-600">{{ currentWeather.sunset }}</span>
+                                            <span class="text-gray-300">Sunset</span>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="header">
+                                    <div class="title">Humidity</div>
+                                </div>
+                                <div class="content wind flex items-center">
+                                    <span class="text">{{currentWeather.humidity}}</span>
+                                    <span class="text-4xl px-2 text-gray-400">%</span>
+                                </div>
+                                <div class="text-gray-500 text-3xl">Normal</div>
+                            </div>
+                            <div class="card">
+                                <div class="header">
+                                    <div class="title">Visibility</div>
+                                </div>
+                                <div class="content wind flex items-center">
+                                    <span class="text">{{currentWeather.visibility}}</span>
+                                    <span class="text-4xl px-2 text-gray-400">km</span>
+                                </div>
+                                <div class="text-gray-500 text-3xl">Average</div>
+                            </div>
+                            <div class="card">
+                                <div class="header">
+                                    <div class="title">Clouds</div>
+                                </div>
+                                <div class="content wind flex items-center">
+                                    <span class="text">{{ currentWeather.clouds }}</span>
+                                    <span class="text-4xl px-2 text-gray-400">%</span>
+                                </div>
+                                <div class="text-gray-500 text-3xl">Average</div>
                             </div>
                         </div>
                     </div>
@@ -142,9 +247,10 @@
 </template>
 
 <script>
+/* eslint-disable */
 import moment from 'moment'
 import { ContentLoader } from 'vue-content-loader'
-
+const dateTimeHelper =  require('@/helper/DateTimeHelper')
 export default {
     name: 'Home',
     components: {
@@ -152,26 +258,24 @@ export default {
     },
     data() {
         return {
-            contentLoading: false,
+            contentLoading: true,
             showSearchBox: false,
             loading: false,
             searchQuery : '',
             placeDateTime: '',
+            currentLocation: 'Your Current Location',
+            currentWeather: {},
+            currentTemp: 0,
+            placeName: '',
             suggestions: {},
             selectedIndex: -1,
+            weatherSearchResult: Proxy,
             coordinates: {
               lat : 0,
               lon : 0,
             },
-            daily: {
-                0: {'date': "Sun", 'weather': "cloudy-night.gif", 'temp': "22",},
-                1: {'date': "Mon", 'weather': "cloudy-night.gif", 'temp': "25",},
-                2: {'date': "The", 'weather': "thunder.gif", 'temp': "33",},
-                3: {'date': "Wed", 'weather': "cloudy-night.gif", 'temp': "29",},
-                4: {'date': "Thu", 'weather': "partly-cloudy.gif", 'temp': "30",},
-                5: {'date': "Fri", 'weather': "cloudy-night.gif", 'temp': "30",},
-                6: {'date': "Sat", 'weather': "snow.gif", 'temp': "21",},
-            }
+            daily: [],
+
         }
     },
     watch: {
@@ -201,15 +305,19 @@ export default {
         hideSearchModal() {
             this.showSearchBox = false
         },
+        hideContentLoader(){
+            this.contentLoading = false
+        },
+        showContentLoader(){
+            this.contentLoading = true
+        },
         async search(query) {
-            this.loading = true
             let result =  await this.$geoapify.get('', {
                 params: {
                     'text': query,
                     limit: 20
                 }
             })
-            this.loading = false
             this.suggestions = result.data.features
         },
         boldSelectedText(selectedText) {
@@ -219,27 +327,30 @@ export default {
 
            return selectedText.replace(regEx, '<b>' + replaceMask + '</b>');
         },
-        async searchWeather(suggestion) {
+        async getPlaceWeatherInfo(lat, lon){
+            return await this.$openWeatherMap.get('', {
+                params: {
+                    lat: lat,
+                    lon: lon,
+                }
+            })
+        },
+        async searchWeather(index) {
 
             this.contentLoading = true
             this.hideSearchModal()
 
-            this.coordinates.lat = suggestion.properties.lat
-            this.coordinates.lon = suggestion.properties.lon
+            let lat = this.suggestions[index].properties.lat
+            let lon = this.suggestions[index].properties.lon
 
-            let result = await this.$openWeatherMap.get('', {
-                params: {
-                    lat: this.coordinates.lat,
-                    lon: this.coordinates.lon,
-                }
-            })
+            this.currentLocation = this.suggestions[index].properties.formatted
 
-            this.contentLoading = false
+            let searchResult = await this.getPlaceWeatherInfo(lat, lon)
 
-            this.placeDateTime = this.convertToDateTime(result.data.current.dt, result.data.timezone_offset)
+            this.bindViewData(searchResult)
         },
-        convertToDateTime(unix, timeZoneOffset) {
-            return moment.unix(unix + timeZoneOffset - 3600).format('dddd, HH:mm')
+        convertToDateTime(unix, format) {
+            return moment.unix(unix - 3600).format(format)
         },
         triggerSearchBoxResultScroll(){
             let element = this.$refs['suggestion_' + this.selectedIndex];
@@ -247,10 +358,69 @@ export default {
                 let top = element[0].offsetTop;
                 this.$refs['suggestions'].scrollTo(0, top - 50);
             }
-        }
+        },
+        bindViewData(searchResult){
+            if(searchResult.status === 200){
+                // hide Content Loader
+                this.contentLoading = false
+                this.setCurrentWeather(searchResult.data.current)
+                this.setWeatherSearchResult(searchResult)
 
+                this.daily = this.getMappedDailyWeather()
+
+                let timestamp = this.getCurrentWeather().dt + this.getTimezoneOffset()
+
+                this.placeDateTime = this.convertToDateTime(timestamp, 'dddd, HH:mm')
+            }
+        },
+        getCurrentWeather(){
+            return this.weatherSearchResult.data.current;
+        },
+        setCurrentWeather(current){
+            current.sunrise = dateTimeHelper.getTime(current.sunrise)
+            current.sunset = dateTimeHelper.getTime(current.sunset)
+            current.visibility = current.visibility / 1000
+            this.currentTemp = Math.floor(current.temp)
+            this.currentWeather = current
+        },
+        setWeatherSearchResult(result){
+            this.weatherSearchResult = result
+        },
+        getWeatherSearchResult(){
+            return this.weatherSearchResult
+        },
+        getMappedDailyWeather(){;
+            this.getWeatherSearchResult().data.daily.map(day => {
+                day.dayName = dateTimeHelper.getDayName(day.dt)
+                day.fullDate = dateTimeHelper.getFullDate(day.dt)
+                day.temp.day = Math.floor(day.temp.day)
+            });
+
+            return this.weatherSearchResult.data.daily;
+        },
+        getTimezoneOffset(){
+            return this.getWeatherSearchResult().data.timezone_offset;
+        },
+        initFirstSearch() {
+            this.contentLoading = true
+
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                let lat = pos.coords.latitude;
+                let lon = pos.coords.longitude;
+
+                let searchResult = await this.getPlaceWeatherInfo(lat, lon);
+                this.bindViewData(searchResult)
+
+                this.contentLoading = false
+
+            }, (err) => {
+                console.warn(`ERROR(${err.code}): ${err.message}`)
+            });
+        }
     },
-    mounted() {
+    async mounted() {
+        this.initFirstSearch();
+
         document.addEventListener('keydown', (event) => {
             if (event.ctrlKey && event.key === 'k') {
                 event.preventDefault();
@@ -275,6 +445,9 @@ export default {
 </script>
 
 <style lang="scss">
+.spacer {
+    @apply flex-grow;
+}
 .weather-main-page {
     @apply flex w-full h-full overflow-hidden bg-gray-100;
 
@@ -321,7 +494,7 @@ export default {
     }
 
     .sidebar {
-        @apply bg-white shadow-md hidden lg:block w-80 p-8;
+        @apply bg-white shadow-md hidden lg:flex flex-col w-80 p-8;
     }
 
     .search-box {
@@ -369,26 +542,53 @@ export default {
         }
 
         .page-body {
-            @apply flex-grow h-full w-full w-10/12 px-10 overflow-y-auto;
+            @apply flex-grow h-full w-full w-10/12 p-10 overflow-y-auto;
         }
 
         .section {
-
+            @apply pb-16;
             .section-title {
-                @apply font-bold text-3xl text-gray-600 text-left pb-5;
+                @apply font-bold text-3xl text-gray-600 text-left pb-7;
             }
         }
 
-        .cards {
-            @apply pb-10 grid gap-5;
+        .daysCards {
+            @apply grid gap-5;
             grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
 
             .card {
-                @apply max-w-sm bg-white border-2 border-gray-50 shadow-sm rounded-md p-2;
+                @apply max-w-sm bg-white border-2 border-gray-50 shadow-sm rounded-lg p-4;
                 font-family: Outfit-ExtraLight, serif;
 
                 .text-date {
                     @apply text-gray-600 text-2xl;
+
+                }
+
+            }
+        }
+
+        .highlightsCards {
+            @apply grid gap-5;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+
+            .card {
+                @apply max-w-sm flex flex-col bg-white border-2
+                border-gray-50 shadow-sm rounded-lg p-4
+                h-52;
+                font-family: Outfit-ExtraLight, serif;
+
+                .header {
+                    @apply flex;
+                    .title {
+                        @apply flex-grow text-gray-400 text-xl pb-3;
+                    }
+                }
+                .content {
+                    @apply flex-grow;
+                }
+                .wind {
+                    @apply text-gray-600 text-5xl;
 
                 }
 

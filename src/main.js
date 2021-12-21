@@ -22,7 +22,8 @@ var geoapify = axios.create({
 var openWeatherMap = axios.create({
     baseURL: 'https://api.openweathermap.org/data/2.5/onecall',
     params: {
-        appId : process.env.VUE_APP_OPEN_WEATHER_MAP_API_KEY
+        appId : process.env.VUE_APP_OPEN_WEATHER_MAP_API_KEY,
+        units: 'metric'
     }
 });
 
